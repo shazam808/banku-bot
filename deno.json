@@ -20,6 +20,6 @@
     "org": "shazam808",
     "app": "banku-bot",
     "build": "deno task build",
-    "runtime": { "type": "dynamic", "entrypoint": "./dist/main.js", "cwd": "." }
+    "runtime": { "type": "dynamic", "entrypoint": "./dist/main.js", "cwd": "/app/src" }
   }
 }
