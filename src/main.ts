@@ -1,3 +1,4 @@
+/// <reference path="./deno-cron.d.ts" />
 import { loadConfig } from "./config.ts";
 import { processOutbox } from "./delivery.ts";
 import { handleInteraction } from "./interactions.ts";
