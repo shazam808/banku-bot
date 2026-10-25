@@ -5,7 +5,7 @@
   "unstable": ["cron"],
   "tasks": {
     "dev": "deno run --env-file=.env.local --allow-net --allow-env src/main.ts",
-    "check": "deno check src/main.ts scripts/register-commands.ts",
+    "check": "deno check --unstable-cron src/main.ts scripts/register-commands.ts",
     "test": "deno test --allow-env --allow-net=127.0.0.1 tests/",
     "fmt:check": "deno fmt --check",
     "lint": "deno lint"
