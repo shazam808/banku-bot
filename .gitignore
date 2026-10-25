@@ -1,0 +1,28 @@
+# Dependencies and local runtime output
+node_modules/
+coverage/
+dist/
+build/
+.cache/
+tmp/
+temp/
+logs/
+*.log
+
+# Local credentials and configuration
+.env*
+!.env.example
+.dev.vars*
+!.dev.vars.example
+discord.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local data and editor files
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+*.tsbuildinfo

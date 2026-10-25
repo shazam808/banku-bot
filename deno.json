@@ -1,0 +1,22 @@
+{
+  "name": "banku-bot",
+  "version": "0.1.0",
+  "exports": "./src/main.ts",
+  "unstable": ["cron"],
+  "tasks": {
+    "dev": "deno run --env-file=.env.local --allow-net --allow-env src/main.ts",
+    "check": "deno check src/main.ts scripts/register-commands.ts",
+    "test": "deno test --allow-env --allow-net=127.0.0.1 tests/",
+    "fmt:check": "deno fmt --check",
+    "lint": "deno lint"
+  },
+  "fmt": { "lineWidth": 100, "semiColons": true, "singleQuote": false },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.ns", "deno.unstable", "dom", "dom.iterable", "esnext"]
+  },
+  "deploy": {
+    "build": "deno task check",
+    "runtime": { "type": "dynamic", "entrypoint": "./src/main.ts" }
+  }
+}
