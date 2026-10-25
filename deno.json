@@ -19,6 +19,6 @@
     "org": "shazam808",
     "app": "banku-bot",
     "build": "deno task check",
-    "runtime": { "type": "dynamic", "entrypoint": "health-preview.ts", "cwd": "src" }
+    "runtime": { "type": "dynamic", "entrypoint": "main.ts", "cwd": "src" }
   }
 }
