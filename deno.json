@@ -16,6 +16,8 @@
     "lib": ["deno.ns", "deno.unstable", "dom", "dom.iterable", "esnext"]
   },
   "deploy": {
+    "org": "shazam808",
+    "app": "banku-bot",
     "build": "deno task check",
     "runtime": { "type": "dynamic", "entrypoint": "./src/main.ts" }
   }
