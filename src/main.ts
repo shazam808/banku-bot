@@ -3,9 +3,12 @@ import { loadConfig } from "./config.ts";
 import { processOutbox } from "./delivery.ts";
 import { handleInteraction } from "./interactions.ts";
 
-Deno.cron("banku-discord-outbox", "* * * * *", async () => {
-  await processOutbox(loadConfig());
-});
+const deliveryConfig = loadConfig();
+if (deliveryConfig.environment === "production" && deliveryConfig.deliveryEnabled) {
+  Deno.cron("banku-discord-outbox", "* * * * *", async () => {
+    await processOutbox(loadConfig());
+  });
+}
 
 Deno.serve((request) => {
   const path = new URL(request.url).pathname;
