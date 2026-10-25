@@ -6,6 +6,7 @@
   "tasks": {
     "dev": "deno run --env-file=.env.local --allow-net --allow-env src/main.ts",
     "check": "deno check --unstable-cron src/main.ts scripts/register-commands.ts",
+    "build": "deno task check && deno bundle --platform deno src/main.ts -o dist/main.js",
     "test": "deno test --allow-env --allow-net=127.0.0.1 tests/",
     "fmt:check": "deno fmt --check",
     "lint": "deno lint"
@@ -18,6 +19,7 @@
   "deploy": {
     "org": "shazam808",
     "app": "banku-bot",
-    "runtime": { "type": "dynamic", "entrypoint": "./src/main.ts", "cwd": "." }
+    "build": "deno task build",
+    "runtime": { "type": "dynamic", "entrypoint": "./dist/main.js", "cwd": "." }
   }
 }
