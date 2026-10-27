@@ -4,9 +4,11 @@
 выпуск сайта/бота должны быть проверены до переключения доставки.
 
 1. В [Deno Deploy](https://console.deno.com) подключите GitHub и выберите **`shazam808/banku-bot`**.
-   Используйте новый Deno Deploy, а не Deploy Classic. App Directory — корень репозитория (`/`, не
-   `src`); Build command — `deno task check`; Dynamic Entrypoint — `./src/main.ts`. Команда и
-   entrypoint также заданы в корневом `deno.json`. Сначала создайте preview-развёртывание.
+   Используйте новый Deno Deploy, а не Deploy Classic. App Directory — пустое поле (корень
+   репозитория) или `.`; абсолютные `/` и `/src` недопустимы. Runtime — Dynamic, Entrypoint —
+   `src/main.ts`, Runtime Working Directory не задан. Проверку выполняйте локально через
+   `deno task check`; entrypoint задан в корневом `deno.json`. Сначала создайте
+   preview-развёртывание.
 2. В переменные preview внесите `DISCORD_APPLICATION_ID`, `DISCORD_PUBLIC_KEY`, `DISCORD_BOT_TOKEN`,
    `BANKU_API_URL`, `BANKU_SERVICE_SECRET`, `BANKU_SITE_URL`. Bot Token и service secret отмечайте
    как секреты. Установите `BANKU_ENV=preview`, `BANKU_DELIVERY_ENABLED=false`.
