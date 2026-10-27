@@ -18,6 +18,6 @@
   "deploy": {
     "org": "shazam808",
     "app": "banku-bot",
-    "runtime": { "type": "dynamic", "entrypoint": "main.ts" }
+    "runtime": { "type": "dynamic", "entrypoint": "src/main.ts" }
   }
 }
