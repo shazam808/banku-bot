@@ -1,4 +1,5 @@
 import type { BotConfig } from "./config.ts";
+import { auditIsPrivate, type Channel, staffRoles } from "./channel-policy.ts";
 
 export type SendResult = {
   outcome: "delivered" | "retry" | "permanent" | "dm_forbidden";
@@ -24,10 +25,11 @@ function discordRequest(
   });
 }
 
-function classify(response: Response, dm = false): SendResult {
+async function classify(response: Response, dm = false): Promise<SendResult> {
   if (response.ok) return { outcome: "delivered" };
   if (response.status === 429) {
-    const retryHeader = Number(response.headers.get("retry-after"));
+    const data = await response.json().catch(() => ({}));
+    const retryHeader = Number(response.headers.get("retry-after") ?? data.retry_after ?? 60);
     return {
       outcome: "retry",
       errorCode: "discord_429",
@@ -37,13 +39,14 @@ function classify(response: Response, dm = false): SendResult {
     };
   }
   if (response.status >= 500) return { outcome: "retry", errorCode: `discord_${response.status}` };
-  if (dm && (response.status === 403 || response.status === 404)) {
-    return { outcome: "dm_forbidden", errorCode: `discord_dm_${response.status}` };
+  if (dm && response.status === 403 && (await response.json().catch(() => ({}))).code === 50007) {
+    return { outcome: "dm_forbidden", errorCode: "discord_dm_50007" };
   }
   return { outcome: "permanent", errorCode: `discord_${response.status}` };
 }
 
 export async function sendDiscordDelivery(config: BotConfig, delivery: {
+  id: string;
   channel_kind: "dm" | "audit" | "fallback";
   channel_id: string | null;
   guild_id: string;
@@ -51,6 +54,14 @@ export async function sendDiscordDelivery(config: BotConfig, delivery: {
   payload: { title?: string; body?: string; link_path?: string };
 }): Promise<SendResult> {
   try {
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(delivery.id)) {
+      return { outcome: "permanent", errorCode: "invalid_delivery" };
+    }
+    // A UUID in base 36 fits Discord's 25-character message nonce.
+    const identity = {
+      nonce: BigInt("0x" + delivery.id.replaceAll("-", "")).toString(36),
+      enforce_nonce: true,
+    };
     if (delivery.channel_kind === "dm") {
       if (!delivery.discord_user_id || !ID.test(delivery.discord_user_id)) {
         return { outcome: "permanent", errorCode: "invalid_user" };
@@ -77,6 +88,7 @@ export async function sendDiscordDelivery(config: BotConfig, delivery: {
         }]
         : [];
       const sent = await discordRequest(config, "POST", `/channels/${channel.id}/messages`, {
+        ...identity,
         embeds: [{
           title: String(delivery.payload.title ?? "Banku").slice(0, 200),
           description: String(delivery.payload.body ?? "Откройте Banku для подробностей.").slice(
@@ -92,6 +104,15 @@ export async function sendDiscordDelivery(config: BotConfig, delivery: {
     }
     if (!delivery.channel_id || !ID.test(delivery.channel_id) || !ID.test(delivery.guild_id)) {
       return { outcome: "permanent", errorCode: "invalid_channel" };
+    }
+    const metadata = await discordRequest(config, "GET", `/channels/${delivery.channel_id}`);
+    if (!metadata.ok) return classify(metadata);
+    const channel: Channel = await metadata.json();
+    if (
+      channel.guild_id !== delivery.guild_id || channel.id !== delivery.channel_id ||
+      channel.type !== 0
+    ) {
+      return { outcome: "permanent", errorCode: "wrong_guild_or_channel" };
     }
     if (delivery.channel_kind === "fallback") {
       if (!delivery.discord_user_id || !ID.test(delivery.discord_user_id)) {
@@ -110,13 +131,8 @@ export async function sendDiscordDelivery(config: BotConfig, delivery: {
         "POST",
         `/channels/${delivery.channel_id}/messages`,
         {
-          content: `<@${delivery.discord_user_id}>`,
-          embeds: [{
-            title: "Banku · Проблема с уведомлением",
-            description:
-              "Я не смог отправить вам личное банковское уведомление. Проверьте настройки личных сообщений и откройте Banku для подробностей.",
-            color: 0x0bbfce,
-          }],
+          ...identity,
+          content: `<@${delivery.discord_user_id}>, откройте личные сообщения с ботом Banku.`,
           allowed_mentions: {
             parse: [],
             users: [delivery.discord_user_id],
@@ -127,7 +143,14 @@ export async function sendDiscordDelivery(config: BotConfig, delivery: {
       );
       return classify(sent);
     }
+    if (
+      delivery.channel_kind !== "audit" ||
+      !auditIsPrivate(channel, delivery.guild_id, staffRoles(channel.id), config.applicationId)
+    ) {
+      return { outcome: "permanent", errorCode: "unsafe_audit_channel" };
+    }
     const sent = await discordRequest(config, "POST", `/channels/${delivery.channel_id}/messages`, {
+      ...identity,
       embeds: [{
         title: String(delivery.payload.title ?? "Banku Audit").slice(0, 200),
         description: String(delivery.payload.body ?? "Событие Banku").slice(0, 1500),

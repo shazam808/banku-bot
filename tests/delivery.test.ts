@@ -14,6 +14,7 @@ const config: BotConfig = {
   environment: "production",
 };
 const delivery = {
+  id: "23300000-0000-4000-8000-000000000001",
   channel_kind: "dm" as const,
   channel_id: null,
   guild_id: "111111111111111111",
@@ -31,6 +32,13 @@ Deno.test("DM forbidden is permanent; fallback reveals no financial details", as
     }
     if (String(url).includes("/guilds/")) {
       return Promise.resolve(Response.json({ user: { id: delivery.discord_user_id } }));
+    }
+    if (init?.method === "GET") {
+      return Promise.resolve(Response.json({
+        id: "444444444444444444",
+        guild_id: delivery.guild_id,
+        type: 0,
+      }));
     }
     return Promise.resolve(Response.json({ id: "333333333333333333" }));
   };
@@ -62,6 +70,13 @@ Deno.test("no fallback ping when user is absent from the configured guild", asyn
     if (init?.method === "POST") posts++;
     if (String(url).includes("/guilds/")) {
       return Promise.resolve(new Response(null, { status: 404 }));
+    }
+    if (init?.method === "GET") {
+      return Promise.resolve(Response.json({
+        id: "444444444444444444",
+        guild_id: delivery.guild_id,
+        type: 0,
+      }));
     }
     return Promise.resolve(Response.json({}));
   };
