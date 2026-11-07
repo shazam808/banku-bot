@@ -18,6 +18,7 @@
   "deploy": {
     "org": "shazam808",
     "app": "banku-bot",
+    "crons": true,
     "runtime": { "type": "dynamic", "entrypoint": "src/main.ts" }
   }
 }
